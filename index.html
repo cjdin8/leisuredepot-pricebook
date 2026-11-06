@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Price Book — Leisure Depot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== BRAND — swap these three to match shopleisuredepot.com ===== */
+:root{ --brand:#1B4D3E; --brand-deep:#12352B; --brand-accent:#C8672B; }
+/* ================================================================= */
+:root{
+  --ink:#15211F; --ink-2:#2E3D3A; --muted:#6E7C79; --faint:#9AA5A3;
+  --paper:#EDF0EF; --card:#FFFFFF; --rule:#D5DCDA; --rule-2:#E7EBEA;
+  --save:#1B4D3E; --locked:#8A6524; --stop:#9B3A2F; --focus:#1B4D3E;
+  --sc:'Barlow Semi Condensed',system-ui,sans-serif;
+  --body:'Barlow',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:2px}
+
+.mast{border-bottom:1px solid var(--rule);border-top:3px solid var(--brand);background:var(--card);padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;line-height:0}
+.logo img{height:32px;width:auto;display:block}
+@media(max-width:520px){.logo img{height:26px}}
+.mast .sub{font-family:var(--sc);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mast .feed{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--faint);margin-right:6px;vertical-align:middle}
+.dot.on{background:var(--save)}.dot.err{background:var(--stop)}
+
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:22px;padding:22px 20px 90px;max-width:1480px;margin:0 auto}
+@media(max-width:1080px){.wrap{grid-template-columns:minmax(0,1fr);padding-bottom:150px}}
+
+.search{position:relative}
+.search input{width:100%;padding:15px 15px 15px 44px;font-family:var(--body);font-size:17px;border:1px solid var(--rule);border-radius:3px;background:var(--card);color:var(--ink)}
+.search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+.chip{font-family:var(--sc);font-size:12px;letter-spacing:.09em;text-transform:uppercase;padding:5px 11px;border:1px solid var(--rule);background:var(--card);color:var(--muted);border-radius:2px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.count{font-family:var(--mono);font-size:11px;color:var(--faint);padding:8px 2px 12px}
+
+.res{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--rule-2);border:1px solid var(--rule-2);border-radius:3px}
+.res li{background:var(--card)}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;padding:11px 13px;cursor:pointer;font:inherit;color:inherit}
+.row:hover{background:#F6F8F7}
+.thumb{width:44px;height:44px;border:1px solid var(--rule-2);border-radius:2px;object-fit:contain;background:#fff}
+.thumb.ph{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--faint)}
+.nm{font-weight:500;line-height:1.25}
+.meta{font-family:var(--sc);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.sku{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+.from{font-family:var(--mono);font-size:13px;text-align:right;white-space:nowrap}
+.from small{display:block;font-family:var(--sc);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.tag{font-family:var(--sc);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;padding:1px 6px;border-radius:2px;margin-left:6px;white-space:nowrap}
+.tag.stop{color:var(--stop);border:1px solid #E3C9C5}
+.tag.lock{color:var(--locked);border:1px solid #E5D8BD}
+.tag.base{color:var(--brand);border:1px solid #BFD3CC}
+
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:3px;position:sticky;top:74px;max-height:calc(100vh - 96px);display:flex;flex-direction:column}
+@media(max-width:1080px){.panel{position:static;max-height:none}}
+.phead{padding:13px 15px;border-bottom:1px solid var(--rule-2);display:flex;align-items:baseline;gap:10px}
+.phead h2{font-family:var(--sc);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;margin:0}
+.phead .n{font-family:var(--mono);font-size:12px;color:var(--faint);margin-left:auto}
+.lines{overflow-y:auto;flex:1;min-height:60px}
+.empty{padding:30px 18px;color:var(--muted);font-size:14px}
+.empty b{display:block;font-family:var(--sc);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);margin-bottom:5px;font-size:13px}
+
+.line{padding:12px 15px;border-bottom:1px solid var(--rule-2)}
+.l1{display:flex;gap:9px;align-items:flex-start}
+.l1 .nm{flex:1;font-size:14px}
+.x{background:none;border:0;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;padding:0 2px}
+.x:hover{color:var(--stop)}
+.l2{display:flex;gap:7px;align-items:center;margin-top:8px}
+select,.qty input{font-family:var(--sc);font-size:13px;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:2px;padding:5px 7px}
+select{flex:1;min-width:0}
+.qty{display:flex;align-items:center;border:1px solid var(--rule);border-radius:2px}
+.qty button{width:26px;height:28px;background:none;border:0;cursor:pointer;color:var(--ink-2);font-size:15px;line-height:1}
+.qty input{width:34px;border:0;text-align:center;font-family:var(--mono);font-size:13px;padding:0}
+.qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+.cfgbtn{margin-top:8px;width:100%;font-family:var(--sc);font-size:12px;letter-spacing:.09em;text-transform:uppercase;padding:7px;border:1px dashed var(--rule);background:none;color:var(--brand);border-radius:2px;cursor:pointer}
+.cfgbtn:hover{border-color:var(--brand);background:#F4F7F6}
+.cfg{margin-top:9px;border-left:2px solid var(--brand);padding-left:10px}
+.cfgrow{margin-bottom:8px}
+.cfgrow label{display:block;font-family:var(--sc);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.cfgrow select{width:100%}
+.opts{display:flex;flex-direction:column;gap:4px}
+.opt{display:flex;align-items:center;gap:7px;font-size:13.5px}
+.opt input{accent-color:var(--brand);flex:none}
+.opt span{flex:1}
+.opt em{font-family:var(--mono);font-style:normal;font-size:12px;color:var(--muted)}
+.chosen{margin-top:7px;font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.6}
+.chosen div{display:flex;justify-content:space-between;gap:8px}
+
+.ledger{margin-top:9px;display:flex;align-items:flex-end;gap:10px;font-family:var(--mono)}
+.ledger .list{font-size:12px;color:var(--faint);text-decoration:line-through}
+.ledger .net{font-size:17px;font-weight:600;color:var(--save);margin-left:auto}
+.ledger .off{font-size:10.5px;letter-spacing:.06em;color:var(--save);border:1px solid #BFDCD4;border-radius:2px;padding:1px 5px;align-self:center}
+.hatch{margin-left:auto;font-family:var(--sc);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--locked);text-align:right;line-height:1.3}
+.hatch b{display:block;font-family:var(--mono);font-size:15px;letter-spacing:0;color:var(--ink)}
+
+.discountbar{padding:13px 15px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);background:#FAFBFB}
+.discountbar .dhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.discountbar .dhead span:first-child{font-family:var(--sc);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.discountbar .dhead span:last-child{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--save)}
+.discountbar input[type=range]{width:100%;accent-color:var(--brand);cursor:pointer}
+.discountbar .dscale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px}
+.discountbar .dnote{font-size:11.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+
+.totals{border-top:1px solid var(--rule);padding:13px 15px;background:#FAFBFB}
+.trow{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:13px;padding:3px 0}
+.trow span:first-child{font-family:var(--sc);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.trow.big{font-size:22px;font-weight:600;padding-top:9px;margin-top:5px;border-top:1px solid var(--rule-2)}
+.trow.big span:first-child{font-size:13px;color:var(--ink)}
+.trow.big span:last-child{color:var(--brand)}
+.trow.save span:last-child{color:var(--save)}
+.note{font-size:12.5px;color:var(--locked);margin-top:9px;line-height:1.4}
+.acts{display:flex;gap:8px;padding:0 15px 15px}
+.btn{flex:1;font-family:var(--sc);font-size:13.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;padding:11px;border-radius:2px;border:1px solid var(--brand);background:var(--brand);color:#fff;cursor:pointer}
+.btn:hover:not(:disabled){background:var(--brand-deep);border-color:var(--brand-deep)}
+.btn.ghost{background:none;color:var(--brand);border-color:var(--rule)}
+.btn.ghost:hover{background:#F4F7F6;border-color:var(--brand)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+dialog{border:1px solid var(--rule);border-radius:3px;padding:0;max-width:400px;width:calc(100% - 32px);background:var(--card)}
+dialog::backdrop{background:rgba(21,33,31,.4)}
+.dh{padding:15px;border-bottom:1px solid var(--rule-2);font-family:var(--sc);font-weight:700;letter-spacing:.09em;text-transform:uppercase;font-size:14px}
+.db{padding:15px;display:flex;flex-direction:column;gap:11px}
+label.fl{font-family:var(--sc);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.db input,.db textarea{width:100%;padding:9px;font-family:var(--body);font-size:15px;border:1px solid var(--rule);border-radius:2px;background:var(--card);color:var(--ink)}
+.db textarea{resize:vertical;min-height:56px}
+.df{padding:0 15px 15px;display:flex;gap:8px}
+.msg{font-size:13px;padding:0 15px 13px}
+.msg.err{color:var(--stop)}.msg.ok{color:var(--save)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <a class="logo" href="https://shopleisuredepot.com" aria-label="Leisure Depot">
+    <img src="https://shopleisuredepot.com/cdn/shop/files/Leisure_Depot_basic_logo_1_280x@2x.png?v=1773793189" alt="Leisure Depot">
+  </a>
+  <span class="sub">Price Book</span>
+  <span class="feed"><span class="dot" id="dot"></span><span id="feedtxt">Loading…</span></span>
+</header>
+
+<div class="wrap">
+  <main>
+    <div class="search">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" autocomplete="off" placeholder="Search SKU or description — 845CAM, settee, 24G base">
+    </div>
+    <div class="filters" id="vendors"></div>
+    <p class="count" id="count"></p>
+    <ul class="res" id="res"></ul>
+  </main>
+
+  <aside class="panel">
+    <div class="phead"><h2>Quote</h2><span class="n" id="lineN"></span></div>
+    <div class="lines" id="lines">
+      <div class="empty"><b>No items yet</b>Search above and tap to add. Frankford umbrellas can be configured with finishes, valances, trims and fringe.</div>
+    </div>
+    <div class="discountbar" id="discountbar" hidden>
+      <div class="dhead"><span>Quote discount</span><span id="dVal">Retail</span></div>
+      <input type="range" id="dSlider" min="0" max="20" step="1" value="0" aria-label="Discount percentage off list">
+      <div class="dscale"><span>Retail</span><span>10%</span><span>20%</span></div>
+      <p class="dnote" id="dNote">Starts at retail. MAP-locked items stay at list. Frankford's 15%-cap collections stop at 15% however far you slide.</p>
+    </div>
+    <div class="totals" id="totals" hidden>
+      <div class="trow"><span>List</span><span id="tList"></span></div>
+      <div class="trow save"><span>Discount</span><span id="tSave"></span></div>
+      <div class="trow big"><span>Net</span><span id="tNet"></span></div>
+      <p class="note" id="tNote" hidden></p>
+    </div>
+    <div class="acts">
+      <button class="btn ghost" id="clear" disabled>Clear</button>
+      <button class="btn" id="send" disabled>Send quote</button>
+    </div>
+  </aside>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <div class="dh">Send quote</div>
+    <div class="db">
+      <div><label class="fl" for="cName">Customer name</label><input id="cName"></div>
+      <div><label class="fl" for="cPhone">Phone</label><input id="cPhone" type="tel"></div>
+      <div><label class="fl" for="cEmail">Email</label><input id="cEmail" type="email"></div>
+      <p class="fl" style="margin:0;font-weight:400">Phone or email is needed to send the quote to the CRM.</p>
+      <div><label class="fl" for="cNotes">Notes</label><textarea id="cNotes"></textarea></div>
+    </div>
+    <p class="msg" id="dMsg" hidden></p>
+    <div class="df">
+      <button class="btn ghost" value="cancel" type="submit">Cancel</button>
+      <button class="btn ghost" id="doCopy" type="button">Copy</button>
+      <button class="btn" id="doSend" type="button">Send</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const SHEET='https://docs.google.com/spreadsheets/d/e/2PACX-1vS1KbdX7c2KWe7oUN4zi_SPpNzre5QJxQAmetE8u3tTLxvaXr2pJJ5isWCIdbkl9zNmPUz4sU9GGUku/pub?single=true&output=csv&gid=';
+const CONFIG={
+  FEED_PRICES : SHEET+'1455499278',   // master_prices_public
+  FEED_OPTIONS: SHEET+'387150619',    // frank_options
+  FEED_BASES  : SHEET+'770289449',    // frank_bases
+  FEED_TCONFIG: SHEET+'584766925',    // tele_config
+  FEED_TTABLES: SHEET+'1748128226',   // tele_tables
+  FEED_TXREF  : SHEET+'557823670',    // tele_table_xref
+  FEED_FABRICS: SHEET+'372463616',    // lf_fabrics
+  THUMBS      : '/lf_thumbs/',
+  QUOTE_EMAIL : '',   // shop address cc'd on every customer quote — e.g. shop@myleisuredepot.com
+  LEAD_API    : 'https://leisuredepot-spa-studio.netlify.app/api/lead',  // shared GHL lead endpoint (Spa Studio site). Empty = CRM step skipped.
+  DEFAULT_DISCOUNT_PCT: 0,    // slider starts at retail (no discount)
+  MAX_DISCOUNT_PCT: 20,       // slider ceiling
+  MAP15_CAP_PCT: 15           // hard ceiling for map_max_15_below collections
+};
+
+/* ============================================================
+   GLOBAL DISCOUNT SLIDER STATE
+   Replaces the old per-row baked-in discount_pct/net_price for
+   every UNLOCKED line: net is now computed live as
+   list * (1 - DISCOUNT/100). MAP-locked lines (show_net_public=no)
+   are untouched — they still show list-only / pricing-on-request,
+   exactly as before, regardless of slider position.
+   ============================================================ */
+let DISCOUNT = CONFIG.DEFAULT_DISCOUNT_PCT;
+/* Frankford's map_max_15_below collections (Monterey, Avalon, Catalina,
+   Laurel, Emerald Coast) may not be advertised more than 15% under MSRP.
+   Those lines carry cap=15 and clamp there no matter where the slider sits. */
+function effDisc(cap){ return Math.min(DISCOUNT, (cap==null?100:cap)); }
+function netOf(list,cap){ return +(list*(1-effDisc(cap)/100)).toFixed(2); }
+
+function parseCSV(text){
+  const rows=[];let row=[],val='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){val+='"';i++;} else q=false; } else val+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){row.push(val);val='';}
+    else if(c==='\n'){row.push(val);rows.push(row);row=[];val='';}
+    else if(c!=='\r') val+=c;
+  }
+  if(val.length||row.length){row.push(val);rows.push(row);}
+  const head=rows.shift().map(h=>h.trim());
+  return rows.filter(r=>r.length>1).map(r=>{const o={};head.forEach((h,i)=>o[h]=(r[i]??'').trim());return o;});
+}
+const money=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0=n=>'$'+Math.round(n).toLocaleString('en-US');
+const esc=s=>{const d=document.createElement('div');d.textContent=s??'';return d.innerHTML;};
+
+let PRODUCTS=[],VENDORS=[],vendorFilter=null,quote=[];
+const OPTS={};      // Frankford: collection -> category -> options
+const TCFG={};      // Telescope: price_model -> [{arm,finish,color,sku}]
+const TXREF={};     // table top -> [compatible leg codes]
+let FABRICS=[];     // Lloyd Flanders fabrics -> grade
+const SINGLE=['Frame finish','Valance','Designer trim','Fringe'];
+const MULTI =['Underside canopy','Modification','Cabana wall'];
+
+function variantLabel(v,detail){
+  let s=v;
+  if(/^grade_(.+)$/.test(v)) s='Grade '+v.slice(6).replace('plus','+');
+  else if(/^sling_grade_(.+)$/.test(v)) s='Sling · Grade '+v.slice(12);
+  else if(/^padded_sling_grade_(.+)$/.test(v)) s='Padded sling · Grade '+v.slice(19);
+  else if(v==='frame_only') s='Frame only';
+  else if(v==='standard') s='Standard';
+  else if(v==='natural_finish') s='Natural finish';
+  else if(v==='size_1') s='Size 1';
+  else if(v==='size_2') s='Size 2';
+  else s=v.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  return detail?s+' · '+detail:s;
+}
+
+Promise.all([
+  fetch(CONFIG.FEED_PRICES).then(r=>r.text()),
+  fetch(CONFIG.FEED_OPTIONS).then(r=>r.text()).catch(()=>''),
+  fetch(CONFIG.FEED_BASES).then(r=>r.text()).catch(()=>''),
+  fetch(CONFIG.FEED_TCONFIG).then(r=>r.text()).catch(()=>''),
+  fetch(CONFIG.FEED_TTABLES).then(r=>r.text()).catch(()=>''),
+  fetch(CONFIG.FEED_TXREF).then(r=>r.text()).catch(()=>''),
+  fetch(CONFIG.FEED_FABRICS).then(r=>r.text()).catch(()=>'')
+]).then(([pTxt,oTxt,bTxt,tcTxt,ttTxt,txTxt,fbTxt])=>{
+  const map=new Map();
+  for(const r of parseCSV(pTxt)){
+    if(!r.sku||!r.list_price) continue;
+    const key=r.vendor+'|'+r.sku;
+    if(!map.has(key)) map.set(key,{vendor:r.vendor,sku:r.sku,name:r.description||'(no description)',
+      collection:r.collection,status:r.status,image:r.image_file,
+      locked:r.show_net_public==='no',
+      mapCap:(r.map_tier==='map_max_15_below'?CONFIG.MAP15_CAP_PCT:null),
+      kind:'product',variants:[]});
+    const p=map.get(key);
+    if(!p.image&&r.image_file) p.image=r.image_file;
+    p.variants.push({type:r.variant_type,detail:r.variant_detail,
+      label:variantLabel(r.variant_type,r.variant_detail),
+      list:parseFloat(r.list_price),
+      net:r.net_price?parseFloat(r.net_price):null,   // presence marks it un-MAP-locked; value itself is no longer used for display
+      pct:r.discount_pct?parseInt(r.discount_pct):null});
+  }
+  if(bTxt){
+    const bmap=new Map();
+    for(const r of parseCSV(bTxt)){
+      if(!r.code||!r.list_price) continue;
+      const key='BASE|'+r.section+'|'+r.code;
+      if(!bmap.has(key)) bmap.set(key,{vendor:'Frankford Umbrellas',sku:r.code,
+        name:(r.item&&r.item.length>3?r.item:r.code),collection:r.section,
+        status:'active',image:'',locked:false,kind:'base',variants:[]});
+      const p=bmap.get(key);
+      const v=parseFloat(r.list_price);
+      p.variants.push({type:r.finish||'standard',detail:'',
+        label:r.finish||'Standard',list:v,
+        net:r.net_price?parseFloat(r.net_price):v,pct:null});
+    }
+    for(const p of bmap.values()) map.set('BASE|'+p.collection+'|'+p.sku,p);
+  }
+  // --- Telescope table tops & legs become searchable line items ---
+  if(ttTxt){
+    for(const r of parseCSV(ttTxt)){
+      if(!r.sku||!r.list_price) continue;
+      const isTop=r.component==='top';
+      const key='TELE|'+r.component+'|'+r.sku+'|'+(r.material||'');
+      map.set(key,{vendor:'Telescope Casual',sku:r.sku,
+        name:(r.item||r.sku)+(isTop&&r.material?' — '+r.material:''),
+        collection:isTop?'Table tops':'Table legs & bases',
+        status:'active',image:'',locked:false,
+        kind:isTop?'top':'leg',material:r.material||'',
+        variants:[{type:'standard',detail:'',label:isTop?(r.material||'Top'):'Leg / base',
+          list:parseFloat(r.list_price),
+          net:r.net_price?parseFloat(r.net_price):parseFloat(r.list_price),
+          pct:null}]});
+    }
+  }
+  if(txTxt){
+    for(const r of parseCSV(txTxt)){
+      if(!r.top_item||!r.leg_base) continue;
+      if(!TXREF[r.top_item]) TXREF[r.top_item]=[];
+      if(TXREF[r.top_item].indexOf(r.leg_base)<0) TXREF[r.top_item].push(r.leg_base);
+    }
+  }
+  if(tcTxt){
+    for(const r of parseCSV(tcTxt)){
+      if(!r.price_model||!r.sku) continue;
+      if(!TCFG[r.price_model]) TCFG[r.price_model]=[];
+      TCFG[r.price_model].push({arm:r.arm_variant||'MGP ARMS',finish:r.arm_finish||'',
+        color:r.frame_color||'',sku:r.sku,base:r.base_model});
+    }
+  }
+  if(fbTxt){
+    FABRICS=parseCSV(fbTxt).filter(r=>r.fabric_name&&r.grade).map(r=>({
+      sku:r.lf_sku,name:r.fabric_name,collection:r.collection,grade:r.grade,
+      updated:!!r.grade_updated,
+      hay:(r.lf_sku+' '+r.fabric_name+' '+r.collection).toLowerCase()}));
+  }
+  PRODUCTS=[...map.values()];
+  PRODUCTS.forEach(p=>{
+    p.variants.sort((a,b)=>a.list-b.list);
+    p.min=p.variants[0].list;
+    p.hay=(p.sku+' '+p.name+' '+p.collection+' '+p.vendor+' '
+      +(p.kind==='base'?'base mount stem':'')
+      +(p.kind==='top'?'table top':'')
+      +(p.kind==='leg'?'table leg base':'')).toLowerCase();
+  });
+  if(oTxt){
+    for(const r of parseCSV(oTxt)){
+      if(!r.collection||!r.category) continue;
+      if(!OPTS[r.collection]) OPTS[r.collection]={};
+      if(!OPTS[r.collection][r.category]) OPTS[r.collection][r.category]=[];
+      OPTS[r.collection][r.category].push({
+        code:r.code,label:r.option||r.code,
+        add:r.add_to_msrp===''?null:parseFloat(r.add_to_msrp),
+        net:r.net_add===''?null:parseFloat(r.net_add),
+        rule:r.pricing_rule||''});
+    }
+  }
+  VENDORS=[...new Set(PRODUCTS.map(p=>p.vendor))].sort();
+  drawVendors();
+  dot.className='dot on';
+  feedtxt.textContent=PRODUCTS.length.toLocaleString()+' items · '
+    +FABRICS.length.toLocaleString()+' fabrics';
+  search('');
+}).catch(e=>{
+  dot.className='dot err';feedtxt.textContent='Feed unavailable';
+  res.innerHTML='<li><div style="padding:22px 15px"><b style="font-family:var(--sc);letter-spacing:.06em;text-transform:uppercase;font-size:13px">Price feed didn\'t load</b><p style="color:var(--muted);font-size:14px;margin:6px 0 0">'+esc(e.message)+'. Check the published sheets are still live.</p></div></li>';
+});
+
+function drawVendors(){
+  vendors.innerHTML='';
+  VENDORS.forEach(v=>{
+    const b=document.createElement('button');
+    b.className='chip';b.textContent=v;b.setAttribute('aria-pressed','false');
+    b.onclick=()=>{vendorFilter=vendorFilter===v?null:v;
+      [...vendors.children].forEach(c=>c.setAttribute('aria-pressed',c.textContent===vendorFilter));
+      search(q.value);};
+    vendors.appendChild(b);
+  });
+}
+
+const LIMIT=50;
+function search(term){
+  const t=term.trim().toLowerCase();
+  const words=t.split(/\s+/).filter(Boolean);
+  let hits=PRODUCTS.filter(p=>{
+    if(vendorFilter&&p.vendor!==vendorFilter) return false;
+    return words.every(w=>p.hay.includes(w));
+  });
+  if(t) hits.sort((a,b)=>{
+    const A=a.sku.toLowerCase().startsWith(t)?0:1,B=b.sku.toLowerCase().startsWith(t)?0:1;
+    return A-B||a.name.localeCompare(b.name);
+  });
+  count.textContent=hits.length.toLocaleString()+(hits.length===1?' item':' items')+(hits.length>LIMIT?' — showing first '+LIMIT:'');
+  res.innerHTML='';
+  if(!hits.length){res.innerHTML='<li><div style="padding:22px 15px;color:var(--muted)">Nothing matches "'+esc(term)+'".</div></li>';return;}
+  const frag=document.createDocumentFragment();
+  hits.slice(0,LIMIT).forEach(p=>{
+    const li=document.createElement('li'),b=document.createElement('button');
+    b.className='row';b.onclick=()=>addLine(p);
+    const disc=p.status&&p.status.indexOf('discontinued')===0;
+    const cfg=(p.kind==='product'&&(OPTS[p.collection]||TCFG[p.sku]))||(p.kind==='top'&&TXREF[p.sku]);
+    b.innerHTML=(p.image?'<img class="thumb" src="'+CONFIG.THUMBS+p.image+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'thumb ph\',textContent:\'—\'}))">':'<div class="thumb ph">—</div>')
+      +'<div><div class="nm">'+esc(p.name)
+      +(disc?'<span class="tag stop">Discontinued</span>':'')
+      +(p.locked?'<span class="tag lock">MAP</span>':'')
+      +(p.kind==='base'?'<span class="tag base">Base</span>':'')
+      +(p.kind==='top'?'<span class="tag base">Table top</span>':'')
+      +(p.kind==='leg'?'<span class="tag base">Table leg</span>':'')
+      +(cfg?'<span class="tag base">Configurable</span>':'')
+      +'</div><div class="meta"><span class="sku">'+esc(p.sku)+'</span> · '+esc(p.vendor)+' · '+esc(p.collection)+'</div></div>'
+      +'<div class="from">'+money0(p.min)+'<small>'+(p.variants.length>1?'from':'list')+'</small></div>';
+    li.appendChild(b);frag.appendChild(li);
+  });
+  res.appendChild(frag);
+}
+let timer;q.addEventListener('input',function(){clearTimeout(timer);timer=setTimeout(function(){search(q.value);},110);});
+
+function addLine(p){
+  const ex=quote.find(l=>l.p===p&&Object.keys(l.sel).length===0);
+  if(ex){ex.qty++;drawQuote();return;}
+  const sel={};
+  const cats=OPTS[p.collection];
+  if(p.kind==='product'&&cats&&cats['Frame finish']){
+    const free=cats['Frame finish'].find(o=>o.add===0);
+    if(free) sel['Frame finish']=free.code;
+  }
+  quote.push({p:p,vi:0,qty:1,sel:sel,open:false});
+  drawQuote();
+}
+
+/* optPrice: option's add-on price now flexes with the global slider
+   too, same as the base line — list stays fixed, net is computed live. */
+function optPrice(l,o){
+  if(o.rule==='priced_at_grade_A+'){
+    const ap=l.p.variants.find(v=>v.type==='grade_Aplus');
+    return ap?{list:ap.list,net:netOf(ap.list,l.p.mapCap)}:{list:0,net:0};
+  }
+  const a=o.add==null?0:o.add;
+  return {list:a, net:netOf(a,l.p.mapCap)};
+}
+/* Telescope: resolve the orderable SKU from arm + colour */
+function teleResolve(l){
+  const rows=TCFG[l.p.sku]; if(!rows) return null;
+  const arm=l.tArm||teleArms(rows)[0];
+  const col=l.tColor||teleColors(rows,arm)[0];
+  const hit=rows.find(r=>armKey(r)===arm&&r.color===col);
+  return {arm:arm,color:col,sku:hit?hit.sku:null};
+}
+function armKey(r){ return r.arm+(r.finish?' · '+r.finish:''); }
+function teleArms(rows){
+  const out=[]; rows.forEach(r=>{const k=armKey(r); if(out.indexOf(k)<0) out.push(k);});
+  return out.sort();
+}
+/* Telescope prints colours in a fixed order across every page */
+const COLOR_ORDER=['White','Snow','Black','Warm Grey','Kona','Desert Sand',
+                   'Beachwood','Storm','Graphite'];
+function teleColors(rows,arm){
+  const out=[]; rows.forEach(r=>{ if(armKey(r)===arm&&r.color&&out.indexOf(r.color)<0) out.push(r.color);});
+  return out.sort(function(a,b){
+    const A=COLOR_ORDER.indexOf(a),B=COLOR_ORDER.indexOf(b);
+    return (A<0?99:A)-(B<0?99:B) || a.localeCompare(b);
+  });
+}
+/* Table top: the chosen leg adds its price to the line */
+function tableLeg(l){
+  if(l.p.kind!=='top'||!l.tLeg) return null;
+  const lp=PRODUCTS.find(p=>p.kind==='leg'&&p.sku===l.tLeg);
+  if(!lp) return null;
+  const v=lp.variants[0];
+  return {sku:l.tLeg,name:lp.name,list:v.list,net:netOf(v.list,lp.mapCap)};
+}
+
+/* Lloyd Flanders: a fabric implies a grade, which selects the priced variant */
+function fabricCapable(p){
+  return p.vendor==='Lloyd Flanders' && FABRICS.length
+      && p.variants.some(v=>/^grade_/.test(v.type));
+}
+function applyFabric(l,fab){
+  l.fab=fab;
+  const cur=l.p.variants[l.vi];
+  const want='grade_'+fab.grade;
+  let hit=l.p.variants.findIndex(v=>v.type===want&&v.detail===cur.detail);
+  if(hit<0) hit=l.p.variants.findIndex(v=>v.type===want&&!v.detail);
+  if(hit<0) hit=l.p.variants.findIndex(v=>v.type===want);
+  if(hit>=0) l.vi=hit;
+}
+
+function chosenOptions(l){
+  const cats=OPTS[l.p.collection];if(!cats) return [];
+  const out=[];
+  Object.keys(cats).forEach(function(cat){
+    const s=l.sel[cat];if(!s) return;
+    const codes=Array.isArray(s)?s:[s];
+    codes.forEach(function(c){
+      const o=cats[cat].find(x=>x.code===c);
+      if(o){const pr=optPrice(l,o);out.push({cat:cat,o:o,list:pr.list,net:pr.net});}
+    });
+  });
+  return out;
+}
+
+function fillFabricList(sel,l,i){
+  const q=(l.fq||'').trim().toLowerCase();
+  const words=q.split(/\s+/).filter(Boolean);
+  let hits=FABRICS.filter(f=>words.every(w=>f.hay.indexOf(w)>-1));
+  const CAP=80;
+  sel.innerHTML='';
+  const none=document.createElement('option');none.value='';
+  none.textContent=hits.length?'— select from '+hits.length+' —':'no fabric matches';
+  sel.appendChild(none);
+  hits.slice(0,CAP).forEach(function(f){
+    const o=document.createElement('option');o.value=f.sku;
+    o.textContent=f.name+'  ·  Gr '+f.grade+'  ·  '+f.collection;
+    o.selected=(l.fab&&l.fab.sku===f.sku);
+    sel.appendChild(o);
+  });
+  if(hits.length>CAP){
+    const more=document.createElement('option');more.disabled=true;
+    more.textContent='… '+(hits.length-CAP)+' more — keep typing';
+    sel.appendChild(more);
+  }
+}
+
+/* ============================================================
+   DISCOUNT SLIDER — wiring
+   ============================================================ */
+dSlider.min = 0;
+dSlider.max = CONFIG.MAX_DISCOUNT_PCT;
+dSlider.value = DISCOUNT;
+dVal.textContent = DISCOUNT ? DISCOUNT + '%' : 'Retail';
+dSlider.addEventListener('input', function(e){
+  DISCOUNT = parseInt(e.target.value, 10) || 0;
+  dVal.textContent = DISCOUNT ? DISCOUNT + '%' : 'Retail';
+  drawQuote();
+});
+
+function drawQuote(){
+  lineN.textContent=quote.length?quote.length+(quote.length===1?' item':' items'):'';
+  clear.disabled=send.disabled=!quote.length;
+  totals.hidden=!quote.length;
+  discountbar.hidden=!quote.length;
+  if(!quote.length){lines.innerHTML='<div class="empty"><b>No items yet</b>Search above and tap to add. Frankford umbrellas can be configured with finishes, valances, trims and fringe.</div>';return;}
+  lines.innerHTML='';
+  let tList=0,tNetable=0,tNet=0,lockedCount=0,cappedCount=0;
+
+  quote.forEach(function(l,i){
+    const v=l.p.variants[l.vi];
+    const opts=chosenOptions(l);
+    let addL=0,addN=0;
+    opts.forEach(x=>{addL+=x.list;addN+=x.net;});
+    const leg=tableLeg(l);
+    if(leg){addL+=leg.list;addN+=leg.net;}
+    const eachList=v.list+addL;
+    const isLocked=l.p.locked||v.net==null;   // MAP-restricted — untouched by slider
+    const eachNet=isLocked ? eachList : netOf(v.list,l.p.mapCap)+addN;
+    const lineList=eachList*l.qty;
+    tList+=lineList;
+    if(isLocked){lockedCount++;}
+    else {tNet+=eachNet*l.qty;tNetable+=lineList;
+          if(effDisc(l.p.mapCap)<DISCOUNT) cappedCount++;}
+
+    const d=document.createElement('div');d.className='line';
+    const h=document.createElement('div');h.className='l1';
+    h.innerHTML='<div class="nm">'+esc(l.p.name)+'<div class="meta"><span class="sku">'+esc(l.p.sku)+'</span> · '+esc(l.p.vendor)+'</div></div>';
+    const x=document.createElement('button');x.className='x';x.type='button';
+    x.setAttribute('aria-label','Remove '+l.p.name);x.textContent='×';
+    x.onclick=function(){quote.splice(i,1);drawQuote();};
+    h.appendChild(x);d.appendChild(h);
+
+    const c=document.createElement('div');c.className='l2';
+    const sel=document.createElement('select');
+    sel.setAttribute('aria-label','Option for '+l.p.name);
+    l.p.variants.forEach(function(vv,j){
+      const o=document.createElement('option');o.value=j;o.textContent=vv.label;o.selected=(j===l.vi);
+      sel.appendChild(o);
+    });
+    sel.onchange=function(e){l.vi=+e.target.value;drawQuote();};
+    c.appendChild(sel);
+    const qw=document.createElement('div');qw.className='qty';
+    const dn=document.createElement('button');dn.type='button';dn.textContent='–';dn.setAttribute('aria-label','Decrease quantity');
+    dn.onclick=function(){if(l.qty>1){l.qty--;drawQuote();}};
+    const inp=document.createElement('input');inp.type='number';inp.min='1';inp.value=l.qty;inp.setAttribute('aria-label','Quantity');
+    inp.onchange=function(e){l.qty=Math.max(1,parseInt(e.target.value)||1);drawQuote();};
+    const up=document.createElement('button');up.type='button';up.textContent='+';up.setAttribute('aria-label','Increase quantity');
+    up.onclick=function(){l.qty++;drawQuote();};
+    qw.appendChild(dn);qw.appendChild(inp);qw.appendChild(up);c.appendChild(qw);d.appendChild(c);
+
+    // ---- Telescope furniture: arm style + frame colour -> order code ----
+    const trows=(l.p.kind==='product')?TCFG[l.p.sku]:null;
+    if(trows){
+      const res=teleResolve(l);
+      const btn=document.createElement('button');btn.className='cfgbtn';btn.type='button';
+      btn.textContent=l.open?'Hide options':(res&&res.sku?'Order code · '+res.sku:'Choose colour & arm');
+      btn.onclick=function(){l.open=!l.open;drawQuote();};
+      d.appendChild(btn);
+      if(l.open){
+        const box=document.createElement('div');box.className='cfg';
+        const arms=teleArms(trows);
+        const r1=document.createElement('div');r1.className='cfgrow';
+        r1.innerHTML='<label>Arm style</label>';
+        const sa=document.createElement('select');
+        arms.forEach(function(a){const o=document.createElement('option');o.value=a;o.textContent=a;o.selected=(res.arm===a);sa.appendChild(o);});
+        sa.onchange=function(e){l.tArm=e.target.value;l.tColor=null;drawQuote();};
+        r1.appendChild(sa);box.appendChild(r1);
+        const cols=teleColors(trows,res.arm);
+        const r2=document.createElement('div');r2.className='cfgrow';
+        r2.innerHTML='<label>Frame colour</label>';
+        const sc=document.createElement('select');
+        cols.forEach(function(cc){const o=document.createElement('option');o.value=cc;o.textContent=cc;o.selected=(res.color===cc);sc.appendChild(o);});
+        sc.onchange=function(e){l.tColor=e.target.value;drawQuote();};
+        r2.appendChild(sc);box.appendChild(r2);
+        d.appendChild(box);
+      }
+      if(res&&res.sku){
+        const ch=document.createElement('div');ch.className='chosen';
+        ch.innerHTML='<div><span>Order code</span><span>'+esc(res.sku)+'</span></div>'
+          +'<div><span>'+esc(res.color)+'</span><span>'+esc(res.arm)+'</span></div>';
+        d.appendChild(ch);
+      }
+    }
+
+    // ---- Table top: compatible legs only ----
+    if(l.p.kind==='top'&&TXREF[l.p.sku]){
+      const legs=TXREF[l.p.sku].map(function(code){
+        return PRODUCTS.find(p=>p.kind==='leg'&&p.sku===code);
+      }).filter(Boolean);
+      const rw=document.createElement('div');rw.className='cfgrow';
+      rw.style.marginTop='8px';
+      rw.innerHTML='<label>Leg / base — '+legs.length+' compatible</label>';
+      const s2=document.createElement('select');
+      const none=document.createElement('option');none.value='';none.textContent='— top only —';s2.appendChild(none);
+      legs.forEach(function(lp){
+        const o=document.createElement('option');o.value=lp.sku;
+        o.textContent=lp.sku+' · '+lp.name+'  +'+money0(lp.variants[0].list);
+        o.selected=(l.tLeg===lp.sku);s2.appendChild(o);
+      });
+      s2.onchange=function(e){l.tLeg=e.target.value||null;drawQuote();};
+      rw.appendChild(s2);d.appendChild(rw);
+      const lg=tableLeg(l);
+      if(lg){
+        const ch=document.createElement('div');ch.className='chosen';
+        ch.innerHTML='<div><span>'+esc(lg.sku)+' leg / base</span><span>+'+money0(lg.list)+'</span></div>';
+        d.appendChild(ch);
+      }
+    }
+
+    // ---- Lloyd Flanders fabric picker ----
+    if(fabricCapable(l.p)){
+      const btn=document.createElement('button');btn.className='cfgbtn';btn.type='button';
+      btn.textContent=l.open?'Hide fabrics':(l.fab?'Fabric · '+l.fab.name+' (Grade '+l.fab.grade+')':'Choose fabric');
+      btn.onclick=function(){l.open=!l.open;drawQuote();};
+      d.appendChild(btn);
+      if(l.open){
+        const box=document.createElement('div');box.className='cfg';
+        const fr=document.createElement('div');fr.className='cfgrow';
+        fr.innerHTML='<label>Filter fabrics</label>';
+        const fi=document.createElement('input');
+        fi.type='search';fi.placeholder='name, code or book';fi.value=l.fq||'';
+        fi.style.cssText='width:100%;padding:5px 7px;font-family:var(--body);font-size:14px;border:1px solid var(--rule);border-radius:2px';
+        fi.oninput=function(e){l.fq=e.target.value;
+          const box2=document.getElementById('fl'+i); if(box2) fillFabricList(box2,l,i);};
+        fr.appendChild(fi);box.appendChild(fr);
+
+        const lr=document.createElement('div');lr.className='cfgrow';
+        lr.innerHTML='<label>Fabric</label>';
+        const sf=document.createElement('select');sf.id='fl'+i;sf.size=1;
+        fillFabricList(sf,l,i);
+        sf.onchange=function(e){
+          const f=FABRICS.find(x=>x.sku===e.target.value);
+          if(f){applyFabric(l,f);} else {delete l.fab;}
+          drawQuote();
+        };
+        lr.appendChild(sf);box.appendChild(lr);
+        d.appendChild(box);
+      }
+      if(l.fab){
+        const ch=document.createElement('div');ch.className='chosen';
+        ch.innerHTML='<div><span>'+esc(l.fab.name)+'</span><span>'+esc(l.fab.sku)+'</span></div>'
+          +'<div><span>'+esc(l.fab.collection)+'</span><span>Grade '+esc(l.fab.grade)+'</span></div>';
+        d.appendChild(ch);
+      }
+    }
+
+    const cats=(l.p.kind==='product')?OPTS[l.p.collection]:null;
+    if(cats){
+      const btn=document.createElement('button');btn.className='cfgbtn';btn.type='button';
+      btn.textContent=(l.open?'Hide options':'Configure')+(opts.length?' · '+opts.length+' selected':'');
+      btn.onclick=function(){l.open=!l.open;drawQuote();};
+      d.appendChild(btn);
+
+      if(l.open){
+        const box=document.createElement('div');box.className='cfg';
+        SINGLE.forEach(function(cat){
+          if(!cats[cat]) return;
+          const rw=document.createElement('div');rw.className='cfgrow';
+          rw.innerHTML='<label>'+esc(cat)+'</label>';
+          const s=document.createElement('select');
+          const none=document.createElement('option');none.value='';none.textContent='— none —';s.appendChild(none);
+          cats[cat].forEach(function(o){
+            const op=document.createElement('option');op.value=o.code;
+            const pr=optPrice(l,o);
+            op.textContent=o.label+(o.rule?'  (grade A+ price)':(pr.list?'  +'+money0(pr.list):'  included'));
+            op.selected=(l.sel[cat]===o.code);
+            s.appendChild(op);
+          });
+          s.onchange=function(e){if(e.target.value){l.sel[cat]=e.target.value;}else{delete l.sel[cat];}drawQuote();};
+          rw.appendChild(s);box.appendChild(rw);
+        });
+        MULTI.forEach(function(cat){
+          if(!cats[cat]) return;
+          const rw=document.createElement('div');rw.className='cfgrow';
+          rw.innerHTML='<label>'+esc(cat)+'</label>';
+          const wrap=document.createElement('div');wrap.className='opts';
+          cats[cat].forEach(function(o){
+            const id='o'+i+cat.replace(/\W/g,'')+o.code.replace(/\W/g,'');
+            const lab=document.createElement('label');lab.className='opt';lab.htmlFor=id;
+            const cb=document.createElement('input');cb.type='checkbox';cb.id=id;
+            const cur=l.sel[cat]||[];cb.checked=cur.indexOf(o.code)>-1;
+            cb.onchange=function(){
+              let arr=Array.isArray(l.sel[cat])?l.sel[cat].slice():[];
+              if(cb.checked){arr.push(o.code);}else{arr=arr.filter(z=>z!==o.code);}
+              if(arr.length){l.sel[cat]=arr;}else{delete l.sel[cat];}
+              drawQuote();
+            };
+            const pr=optPrice(l,o);
+            lab.appendChild(cb);
+            const sp=document.createElement('span');sp.textContent=o.label;lab.appendChild(sp);
+            const em=document.createElement('em');em.textContent=pr.list?'+'+money0(pr.list):'incl.';lab.appendChild(em);
+            wrap.appendChild(lab);
+          });
+          rw.appendChild(wrap);box.appendChild(rw);
+        });
+        d.appendChild(box);
+      }
+    }
+
+    if(opts.length){
+      const ch=document.createElement('div');ch.className='chosen';
+      opts.forEach(function(x){
+        const r=document.createElement('div');
+        r.innerHTML='<span>'+esc(x.o.label)+'</span><span>'+(x.list?'+'+money0(x.list):'incl.')+'</span>';
+        ch.appendChild(r);
+      });
+      d.appendChild(ch);
+    }
+
+    const led=document.createElement('div');led.className='ledger';
+    if(isLocked){
+      led.innerHTML='<div class="hatch"><b>'+money(lineList)+'</b>List · price on request</div>';
+    }else{
+      const eff=effDisc(l.p.mapCap);
+      led.innerHTML='<span class="list">'+money(lineList)+'</span>'
+        +(eff?'<span class="off">'+eff+'% off'+(eff<DISCOUNT?' · MAP cap':'')+'</span>':'')
+        +'<span class="net">'+money(eachNet*l.qty)+'</span>';
+    }
+    d.appendChild(led);
+    lines.appendChild(d);
+  });
+
+  document.getElementById('tList').textContent=money(tList);
+  document.getElementById('tSave').textContent='−'+money(tNetable-tNet);
+  document.getElementById('tNet').textContent=money(tNet+(tList-tNetable));
+  const n=document.getElementById('tNote');
+  const notes=[];
+  if(lockedCount) notes.push(lockedCount+(lockedCount===1?' item is':' items are')
+    +' shown at list. Frankford sets minimum advertised pricing on these collections — the slider can\'t discount them; quote separately with the customer.');
+  if(cappedCount) notes.push(cappedCount+(cappedCount===1?' item is':' items are')
+    +' held at '+CONFIG.MAP15_CAP_PCT+'% — Frankford caps advertised discount on those collections, so they stop short of the slider.');
+  if(notes.length){n.hidden=false;n.textContent=notes.join(' ');}else{n.hidden=true;}
+}
+clear.onclick=function(){quote=[];drawQuote();};
+
+function lineDetail(l){
+  const v=l.p.variants[l.vi],opts=chosenOptions(l);
+  let addL=0,addN=0;opts.forEach(x=>{addL+=x.list;addN+=x.net;});
+  const leg=tableLeg(l); if(leg){addL+=leg.list;addN+=leg.net;}
+  const isLocked=l.p.locked||v.net==null;
+  const eachList=v.list+addL;
+  const eachNet=isLocked?eachList:netOf(v.list,l.p.mapCap)+addN;
+  return {v:v,opts:opts,leg:leg,eachList:eachList,eachNet:eachNet,locked:isLocked};
+}
+function quoteText(){
+  const c=cName.value.trim()||'Customer';
+  const L=['LEISURE DEPOT — QUOTE','Prepared for: '+c,new Date().toLocaleDateString('en-US',{dateStyle:'long'}),
+           (DISCOUNT?'Discount applied: '+DISCOUNT+'%':'Priced at retail — no discount applied'),''];
+  quote.forEach(function(l){
+    const D=lineDetail(l);
+    L.push(l.qty+' × '+l.p.name);
+    L.push('   '+l.p.sku+' · '+l.p.vendor+' · '+D.v.label);
+    if(l.fab) L.push('   fabric '+l.fab.name+'  ('+l.fab.sku+', '+l.fab.collection+', Grade '+l.fab.grade+')');
+    const tr=teleResolve(l);
+    if(tr&&tr.sku) L.push('   order code '+tr.sku+'  ('+tr.color+', '+tr.arm+')');
+    if(D.leg) L.push('   + leg/base '+D.leg.sku+'  '+money(D.leg.list));
+    D.opts.forEach(x=>L.push('   + '+x.o.label+(x.list?'  '+money(x.list):'')));
+    L.push(D.locked?'   '+money(D.eachList*l.qty)+'  (pricing on request)'
+                   :'   '+money(D.eachList*l.qty)+'  →  '+money(D.eachNet*l.qty));
+    L.push('');
+  });
+  L.push('List  '+document.getElementById('tList').textContent);
+  L.push('Net   '+document.getElementById('tNet').textContent);
+  const n=document.getElementById('tNote');
+  if(!n.hidden) L.push('','Note: '+n.textContent);
+  if(cNotes.value.trim()) L.push('','Notes: '+cNotes.value.trim());
+  return L.join('\n');
+}
+send.onclick=function(){dMsg.hidden=true;dlg.showModal();};
+doCopy.onclick=async function(){
+  try{await navigator.clipboard.writeText(quoteText());show('Quote copied.','ok');}
+  catch(e){show('Couldn\'t copy — use Email instead.','err');}
+};
+doSend.onclick=async function(){
+  if(!cName.value.trim()){show('Enter a customer name.','err');cName.focus();return;}
+  const payload={source:'Leisure Depot price book',submitted_at:new Date().toISOString(),
+    discount_pct_applied:DISCOUNT,
+    customer:{name:cName.value.trim(),phone:cPhone.value.trim(),email:cEmail.value.trim(),notes:cNotes.value.trim()},
+    lines:quote.map(function(l){const D=lineDetail(l);
+      return {vendor:l.p.vendor,sku:l.p.sku,description:l.p.name,collection:l.p.collection,
+        kind:l.p.kind,option:D.v.label,qty:l.qty,
+        fabric:l.fab?{sku:l.fab.sku,name:l.fab.name,book:l.fab.collection,grade:l.fab.grade}:null,
+        order_code:(function(){const t=teleResolve(l);return t?t.sku:null;})(),
+        frame_color:(function(){const t=teleResolve(l);return t?t.color:null;})(),
+        arm_style:(function(){const t=teleResolve(l);return t?t.arm:null;})(),
+        leg_base:D.leg?{sku:D.leg.sku,list:D.leg.list}:null,
+        configured_options:D.opts.map(x=>({category:x.cat,code:x.o.code,label:x.o.label,add:x.list})),
+        list_each:+D.eachList.toFixed(2),list_total:+(D.eachList*l.qty).toFixed(2),
+        net_each:D.locked?null:+D.eachNet.toFixed(2),
+        net_total:D.locked?null:+(D.eachNet*l.qty).toFixed(2),
+        pricing_on_request:D.locked,status:l.p.status};})};
+  console.log('Quote payload:',payload);
+  doSend.disabled=true;
+
+  /* ---- Step 1: CRM — GoHighLevel via the shared /api/lead endpoint ---- */
+  let crm='skipped';
+  if(CONFIG.LEAD_API){
+    show('Sending to CRM…','');
+    crm=await postLead(payload);
+  }
+
+  /* ---- Step 2: email the customer (and cc the shop) ---- */
+  const mail=openQuoteMail(payload);
+
+  /* ---- Step 3: one honest status line covering both ---- */
+  const parts=[];
+  if(crm==='ok')   parts.push('Sent to CRM.');
+  if(crm==='fail') parts.push('CRM did not accept it — the quote is NOT logged.');
+  if(mail==='ok')       parts.push('Opening your mail app.');
+  if(mail==='too_long') parts.push('Too long to email from the browser — tap Copy and paste it in.');
+  if(mail==='no_email') parts.push('No customer email entered, so nothing was emailed.');
+  if(crm==='skipped') parts.push('CRM not connected yet.');
+  /* No email is fine when the lead reached the CRM — the rep may just be logging it. */
+  const bad=(crm==='fail')||(mail==='too_long')||(mail==='no_email'&&crm!=='ok');
+  show(parts.join(' '), bad?'err':'ok');
+
+  /* Only clear the quote when everything that was supposed to happen did.
+     Wiping a quote that failed to send would lose the rep's work. */
+  if(!bad){
+    setTimeout(function(){dlg.close();quote=[];drawQuote();
+      ['cName','cPhone','cEmail','cNotes'].forEach(id=>document.getElementById(id).value='');},1200);
+  }
+  doSend.disabled=false;
+};
+
+/* Sends the quote to GoHighLevel through the shared Leisure Depot lead endpoint
+   (same one Spa Studio and the furniture wizard use). Returns 'ok' | 'skipped' | 'fail'. */
+async function postLead(payload){
+  const c=payload.customer;
+  if(!c.phone&&!c.email) return 'fail';
+  let list=0,net=0;payload.lines.forEach(l=>{list+=l.list_total||0;net+=(l.net_total==null?l.list_total:l.net_total)||0;});
+  const vendors=[...new Set(payload.lines.map(l=>l.vendor))];
+  const umb=vendors.indexOf('Frankford Umbrellas')>-1, furn=vendors.some(v=>v!=='Frankford Umbrellas');
+  const src=(function(){let v=new URLSearchParams(location.search).get('src')||'';try{if(v)sessionStorage.setItem('ld_src',v);else v=sessionStorage.getItem('ld_src')||''}catch(e){}return v;})();
+  try{
+    const r=await fetch(CONFIG.LEAD_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      tool:'Price Book', source:src,
+      name:c.name, phone:c.phone, email:c.email, notes:c.notes,
+      interests:[furn?'Outdoor Furniture':null,umb?'Umbrellas':null].filter(Boolean),
+      models:payload.lines.map(l=>l.qty+'× '+l.description+' ('+l.vendor+' '+l.sku+(l.option?', '+l.option:'')+')').join('; '),
+      quoteNumber:'PB-'+Date.now().toString(36).toUpperCase(),
+      retail:+list.toFixed(2), total:+net.toFixed(2),
+      summary:quoteText()
+    })});
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok) return 'fail';
+    return out.crm==='ok'?'ok':(out.crm==='skipped'?'skipped':'fail');
+  }catch(e){ console.warn('CRM post failed:',e.message); return 'fail'; }
+}
+
+/* Returns 'ok' | 'too_long' | 'no_email'. */
+function openQuoteMail(payload){
+  const to=payload.customer.email||'';
+  if(!to) return 'no_email';
+  const cc=CONFIG.QUOTE_EMAIL?'&cc='+encodeURIComponent(CONFIG.QUOTE_EMAIL):'';
+  const url='mailto:'+encodeURIComponent(to)
+    +'?subject='+encodeURIComponent('Leisure Depot quote — '+payload.customer.name)
+    +cc+'&body='+encodeURIComponent(quoteText());
+  /* Windows/Outlook drops mailto links past ~2000 chars, which reads to the
+     rep as a dead button. Say so rather than failing silently. */
+  if(url.length>1900) return 'too_long';
+  window.location.href=url;
+  return 'ok';
+}
+function show(t,cls){dMsg.hidden=false;dMsg.textContent=t;dMsg.className='msg '+cls;}
+</script>
+</body>
+</html>

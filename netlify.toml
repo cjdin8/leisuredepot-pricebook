@@ -1,0 +1,7 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/lf_thumbs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
